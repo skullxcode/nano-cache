@@ -23,6 +23,6 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "node --test"
   }
 }
