@@ -2,6 +2,9 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const createCache = require('../index.js');
 
+const delay = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
 test('creates a cache', () => {
   const cache = createCache();
 
@@ -70,4 +73,58 @@ test('reports the cache size', () => {
   cache.set('second', 2);
 
   assert.equal(cache.size(), 2);
+});
+
+test('keeps an entry available before its TTL expires', () => {
+  const cache = createCache();
+  cache.set('temporary', 'value', 50);
+
+  assert.equal(cache.get('temporary'), 'value');
+});
+
+test('makes an entry unavailable after its TTL expires', async () => {
+  const cache = createCache();
+  cache.set('temporary', 'value', 10);
+
+  await delay(20);
+
+  assert.equal(cache.get('temporary'), null);
+});
+
+test('expires an entry according to its custom TTL', async () => {
+  const cache = createCache();
+  cache.set('short-lived', 'short', 10);
+  cache.set('longer-lived', 'longer', 100);
+
+  await delay(20);
+
+  assert.equal(cache.get('short-lived'), null);
+  assert.equal(cache.get('longer-lived'), 'longer');
+});
+
+test('expires an entry with TTL zero immediately', async () => {
+  const cache = createCache();
+  cache.set('immediate', 'value', 0);
+
+  await delay(0);
+
+  assert.equal(cache.get('immediate'), null);
+});
+
+test('does not report an expired entry with has', async () => {
+  const cache = createCache();
+  cache.set('temporary', 'value', 10);
+
+  await delay(20);
+
+  assert.equal(cache.has('temporary'), false);
+});
+
+test('does not count expired entries in size', async () => {
+  const cache = createCache();
+  cache.set('temporary', 'value', 10);
+
+  await delay(20);
+
+  assert.equal(cache.size(), 0);
 });
