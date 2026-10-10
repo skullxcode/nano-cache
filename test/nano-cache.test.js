@@ -2,8 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const createCache = require('../index.js');
 
-const delay = (milliseconds) =>
-  new Promise((resolve) => setTimeout(resolve, milliseconds));
+const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
 test('creates a cache', () => {
   const cache = createCache();
@@ -127,4 +126,52 @@ test('does not count expired entries in size', async () => {
   await delay(20);
 
   assert.equal(cache.size(), 0);
+});
+
+test('expires entries at the exact TTL boundary', () => {
+  let now = 1000;
+
+  const cache = createCache({
+    defaultTtl: 100,
+    clock: () => now,
+  });
+
+  cache.set('key', 'value');
+
+  now = 1100;
+
+  assert.equal(cache.get('key'), null);
+});
+
+test('supports entries that never expire', () => {
+  let now = 1000;
+
+  const cache = createCache({
+    defaultTtl: Infinity,
+    clock: () => now,
+  });
+
+  cache.set('key', 'value');
+
+  now = 999999999;
+
+  assert.equal(cache.get('key'), 'value');
+});
+
+test('rejects negative custom TTL', () => {
+  const cache = createCache();
+
+  assert.throws(() => cache.set('key', 'value', -1), RangeError);
+});
+
+test('rejects NaN custom TTL', () => {
+  const cache = createCache();
+
+  assert.throws(() => cache.set('key', 'value', NaN), TypeError);
+});
+
+test('rejects string custom TTL', () => {
+  const cache = createCache();
+
+  assert.throws(() => cache.set('key', 'value', '1000'), TypeError);
 });
