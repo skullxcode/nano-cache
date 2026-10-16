@@ -2,6 +2,8 @@ const { validateOptions, validateTtl, validateKey } = require('../utils/validato
 
 const { isExpired, removeExpiredEntries } = require('../utils/expiration');
 
+const createPolicy = require('../policies/policy-factory');
+
 function createCache(options = {}) {
   validateOptions(options);
 
@@ -15,7 +17,36 @@ function createCache(options = {}) {
     throw new TypeError('Clock must be a function');
   }
 
+  const maxEntries = options.maxEntries === undefined ? Infinity : options.maxEntries;
+
+  if (
+    typeof maxEntries !== 'number' ||
+    (maxEntries !== Infinity && (!Number.isInteger(maxEntries) || maxEntries <= 0))
+  ) {
+    throw new RangeError('maxEntries must be a positive integer');
+  }
+
+  const policyName = options.evictionPolicy === undefined ? 'lru' : options.evictionPolicy;
+
+  const policy = createPolicy(policyName);
+
   const cache = new Map();
+
+  function removeEntry(key) {
+    const deleted = cache.delete(key);
+
+    if (deleted) {
+      policy.onDelete(key);
+    }
+
+    return deleted;
+  }
+
+  function cleanupExpiredEntries() {
+    removeExpiredEntries(cache, clock, (key) => {
+      policy.onDelete(key);
+    });
+  }
 
   function set(key, value, customTtl) {
     validateKey(key);
@@ -23,6 +54,21 @@ function createCache(options = {}) {
     const ttlToUse = customTtl === undefined ? defaultTtl : customTtl;
 
     validateTtl(ttlToUse, 'TTL');
+
+    cleanupExpiredEntries();
+
+    const existingEntry = cache.get(key);
+    const isNew = !existingEntry;
+
+    if (isNew && cache.size >= maxEntries) {
+      const keyToEvict = policy.evict();
+
+      if (keyToEvict === null || !cache.has(keyToEvict)) {
+        throw new Error('Eviction policy returned an invalid key');
+      }
+
+      removeEntry(keyToEvict);
+    }
 
     const now = clock();
 
@@ -33,6 +79,8 @@ function createCache(options = {}) {
 
     cache.set(key, entry);
 
+    policy.onSet(key, isNew);
+
     return { key, ...entry };
   }
 
@@ -42,9 +90,11 @@ function createCache(options = {}) {
     const entry = cache.get(key);
 
     if (!entry || isExpired(entry, clock())) {
-      cache.delete(key);
+      removeEntry(key);
       return null;
     }
+
+    policy.onGet(key);
 
     return entry.value;
   }
@@ -55,7 +105,7 @@ function createCache(options = {}) {
     const entry = cache.get(key);
 
     if (!entry || isExpired(entry, clock())) {
-      cache.delete(key);
+      removeEntry(key);
       return false;
     }
 
@@ -64,15 +114,16 @@ function createCache(options = {}) {
 
   function del(key) {
     validateKey(key);
-    return cache.delete(key);
+    return removeEntry(key);
   }
 
   function clear() {
     cache.clear();
+    policy.clear();
   }
 
   function size() {
-    removeExpiredEntries(cache, clock);
+    cleanupExpiredEntries();
     return cache.size;
   }
 
