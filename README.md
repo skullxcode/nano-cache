@@ -4,15 +4,15 @@ A lightweight, zero-dependency in-memory key-value cache with custom TTL (Time-T
 
 ## Features
 
-* **⚡ Lightning Fast:** $O(1)$ lookups, updates, and deletions powered by native JavaScript `Map`.
+- **⚡ Lightning Fast:** $O(1)$ lookups, updates, and deletions powered by native JavaScript `Map`.
 
-* **⏱️ Custom TTL Support:** Set a default expiration time or override it per key.
+- **⏱️ Custom TTL Support:** Set a default expiration time or override it per key.
 
-* **🧹 Automatic Memory Cleanup:** Lazy expiration cleanup keeps your cache lean without background timer leaks.
+- **🧹 Automatic Memory Cleanup:** Lazy expiration cleanup keeps your cache lean without background timer leaks.
 
-* **🛡 Robust Validation:** Strict input checking to prevent type errors.
+- **🛡 Robust Validation:** Strict input checking to prevent type errors.
 
-* **📦 Zero Dependencies:** Lightweight and clean with no external bloat.
+- **📦 Zero Dependencies:** Lightweight and clean with no external bloat.
 
 ## Installation
 
@@ -83,21 +83,21 @@ try {
 
 Creates a new cache instance.
 
-* `options.defaultTtl` *(Number)*: Default expiration time in milliseconds. Defaults to `60000` (1 minute).
+- `options.defaultTtl` _(Number)_: Default expiration time in milliseconds. Defaults to `60000` (1 minute).
 
 ### Methods
 
-* **`set(key, value, [customTtl])`**: Stores a value with an optional custom TTL. Returns the entry object. Throws a `TypeError` if the key is not a non-empty string.
+- **`set(key, value, [customTtl])`**: Stores a value with an optional custom TTL. Returns the entry object. Throws a `TypeError` if the key is not a non-empty string.
 
-* **`get(key)`**: Retrieves the value associated with the key. Returns `null` if the key does not exist or has expired.
+- **`get(key)`**: Retrieves the value associated with the key. Returns `null` if the key does not exist or has expired.
 
-* **`has(key)`**: Returns a boolean indicating whether a valid, unexpired key exists.
+- **`has(key)`**: Returns a boolean indicating whether a valid, unexpired key exists.
 
-* **`del(key)`**: Explicitly removes a key from the cache. Returns `true` if the key existed and was deleted, otherwise `false`.
+- **`del(key)`**: Explicitly removes a key from the cache. Returns `true` if the key existed and was deleted, otherwise `false`.
 
-* **`clear()`**: Wipes all items from the cache.
+- **`clear()`**: Wipes all items from the cache.
 
-* **`size()`**: Returns the count of active, unexpired items in the cache (automatically triggers cleanup of dead entries).
+- **`size()`**: Returns the count of active, unexpired items in the cache (automatically triggers cleanup of dead entries).
 
 ## Author
 
