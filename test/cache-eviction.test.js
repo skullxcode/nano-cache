@@ -79,3 +79,25 @@ test('reclaims expired entries before eviction', () => {
   assert.equal(cache.has('c'), true);
   assert.equal(cache.size(), 2);
 });
+
+test('supports LFU eviction through the cache engine', () => {
+  const cache = createCache({
+    maxEntries: 3,
+    evictionPolicy: 'lfu',
+  });
+
+  cache.set('a', 10);
+  cache.set('b', 20);
+  cache.set('c', 30);
+
+  cache.get('a');
+  cache.get('a');
+  cache.get('c');
+
+  cache.set('d', 40);
+
+  assert.equal(cache.has('a'), true);
+  assert.equal(cache.has('b'), false);
+  assert.equal(cache.has('c'), true);
+  assert.equal(cache.has('d'), true);
+});

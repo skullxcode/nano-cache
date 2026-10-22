@@ -1,7 +1,9 @@
 const createLruPolicy = require('./lru');
+const createLfuPolicy = require('./lfu');
 
 const POLICIES = {
   lru: createLruPolicy,
+  lfu: createLfuPolicy,
 };
 
 function createPolicy(name = 'lru') {
