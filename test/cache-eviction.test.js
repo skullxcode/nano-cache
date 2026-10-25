@@ -101,3 +101,23 @@ test('supports LFU eviction through the cache engine', () => {
   assert.equal(cache.has('c'), true);
   assert.equal(cache.has('d'), true);
 });
+
+test('supports FIFO eviction through the cache engine', () => {
+  const cache = createCache({
+    maxEntries: 3,
+    evictionPolicy: 'fifo',
+  });
+
+  cache.set('a', 10);
+  cache.set('b', 20);
+  cache.set('c', 30);
+
+  cache.get('a');
+  cache.set('d', 40);
+
+  assert.equal(cache.has('a'), false);
+  assert.equal(cache.has('b'), true);
+  assert.equal(cache.has('c'), true);
+  assert.equal(cache.has('d'), true);
+  assert.equal(cache.size(), 3);
+});
