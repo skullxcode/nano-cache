@@ -2,12 +2,14 @@ const createLruPolicy = require('./lru');
 const createLfuPolicy = require('./lfu');
 const createFifoPolicy = require('./fifo');
 const createLifoPolicy = require('./lifo');
+const createMruPolicy = require('./mru');
 
 const POLICIES = {
   lru: createLruPolicy,
   lfu: createLfuPolicy,
   fifo: createFifoPolicy,
   lifo: createLifoPolicy,
+  mru: createMruPolicy,
 };
 
 function createPolicy(name = 'lru') {
