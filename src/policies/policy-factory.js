@@ -3,6 +3,7 @@ const createLfuPolicy = require('./lfu');
 const createFifoPolicy = require('./fifo');
 const createLifoPolicy = require('./lifo');
 const createMruPolicy = require('./mru');
+const createRandomPolicy = require('./random');
 
 const POLICIES = {
   lru: createLruPolicy,
@@ -10,6 +11,7 @@ const POLICIES = {
   fifo: createFifoPolicy,
   lifo: createLifoPolicy,
   mru: createMruPolicy,
+  random: createRandomPolicy,
 };
 
 function createPolicy(name = 'lru') {
@@ -18,7 +20,6 @@ function createPolicy(name = 'lru') {
   }
 
   const normalizedName = name.toLowerCase();
-
   const policyFactory = POLICIES[normalizedName];
 
   if (!policyFactory) {
