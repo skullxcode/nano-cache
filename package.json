@@ -1,14 +1,18 @@
 {
   "name": "@skullx/nano-cache",
   "version": "1.0.0",
-  "description": "A lightweight, zero-dependency in-memory key-value cache with custom TTL expiration built using closures and Maps.",
+  "description": "A lightweight, zero-dependency in-memory key-value cache with configurable TTL and eviction policies.",
   "keywords": [
     "cache",
     "ttl",
     "in-memory",
     "lightweight",
     "map",
-    "zero-dependency"
+    "zero-dependency",
+    "lru",
+    "lfu",
+    "fifo",
+    "nodejs"
   ],
   "homepage": "https://github.com/skullxcode/nano-cache#readme",
   "bugs": {
@@ -21,8 +25,17 @@
   "license": "MIT",
   "author": "Ujjwal Jain (skullx)",
   "type": "commonjs",
-  "main": "src/index.js",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "test": "node --test"
+    "test": "node --test test/",
+    "benchmark": "node benchmarks/cache.bench.js"
   }
 }
