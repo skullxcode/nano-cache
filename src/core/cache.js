@@ -32,6 +32,10 @@ function createCache(options = {}) {
 
   const cache = new Map();
 
+  let hits = 0;
+  let misses = 0;
+  let evictions = 0;
+
   function removeEntry(key) {
     const deleted = cache.delete(key);
 
@@ -68,6 +72,7 @@ function createCache(options = {}) {
       }
 
       removeEntry(keyToEvict);
+      evictions++;
     }
 
     const now = clock();
@@ -91,9 +96,11 @@ function createCache(options = {}) {
 
     if (!entry || isExpired(entry, clock())) {
       removeEntry(key);
+      misses++;
       return null;
     }
 
+    hits++;
     policy.onGet(key);
 
     return entry.value;
@@ -127,6 +134,26 @@ function createCache(options = {}) {
     return cache.size;
   }
 
+  function stats() {
+    const currentSize = size();
+    const totalRequests = hits + misses;
+    const hitRate = totalRequests === 0 ? 0 : hits / totalRequests;
+
+    return {
+      hits,
+      misses,
+      evictions,
+      size: currentSize,
+      hitRate,
+    };
+  }
+
+  function resetStats() {
+    hits = 0;
+    misses = 0;
+    evictions = 0;
+  }
+
   return {
     set,
     get,
@@ -134,6 +161,8 @@ function createCache(options = {}) {
     del,
     clear,
     size,
+    stats,
+    resetStats,
   };
 }
 
