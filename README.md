@@ -1,108 +1,211 @@
-# nano-cache
+# @skullx/nano-cache
 
-A lightweight, zero-dependency in-memory key-value cache with custom TTL (Time-To-Live) expiration, built using closures and native JavaScript `Map`. Crafted with precision by **skullx**.
+A lightweight, zero-dependency, in-memory key-value cache for Node.js with configurable TTL expiration, capacity limits, and multiple eviction policies.
 
 ## Features
 
-- **⚡ Lightning Fast:** $O(1)$ lookups, updates, and deletions powered by native JavaScript `Map`.
-
-- **⏱️ Custom TTL Support:** Set a default expiration time or override it per key.
-
-- **🧹 Automatic Memory Cleanup:** Lazy expiration cleanup keeps your cache lean without background timer leaks.
-
-- **🛡 Robust Validation:** Strict input checking to prevent type errors.
-
-- **📦 Zero Dependencies:** Lightweight and clean with no external bloat.
+- Zero runtime dependencies
+- Configurable time-to-live (TTL)
+- Custom TTL for individual entries
+- Maximum cache capacity
+- Six eviction policies: LRU, LFU, FIFO, LIFO, MRU, and Random
+- Cache statistics and hit-rate tracking
+- TypeScript declarations included
+- Injectable clock for deterministic testing
+- Built on JavaScript `Map`
 
 ## Installation
 
 ```bash
-npm install nano-cache
+npm install @skullx/nano-cache
 ```
 
-## Usage
+## Quick Start
 
-```javascript
-const createCache = require('nano-cache');
+```js
+const createCache = require('@skullx/nano-cache');
 
-// Initialize cache with a default TTL of 5 seconds (5000 ms)
-const cache = createCache({ defaultTtl: 5000 });
+const cache = createCache();
 
-// 1. Set a value with default TTL
-cache.set('user:1', { name: 'Ujjwal' });
+cache.set('username', 'ujjwal');
 
-// 2. Set a value with a custom TTL (e.g., 2 seconds)
-cache.set('temp:token', 'xyz123', 2000);
-
-// 3. Get a value
-console.log(cache.get('user:1')); // { name: 'Ujjwal' }
-
-// 4. Check if a key exists
-console.log(cache.has('user:1')); // true
-
-// 5. Get current cache size (automatically purges expired items)
-console.log(cache.size()); // 2
-
-// 6. Explicitly delete a key
-cache.del('temp:token');
-
-// 7. Clear the entire cache
-cache.clear();
+console.log(cache.get('username')); // 'ujjwal'
+console.log(cache.has('username')); // true
+console.log(cache.size());          // 1
 ```
 
-## Advanced Examples
+## Configuration
 
-### Handling Expiration
+Pass an options object to `createCache()`.
 
-```javascript
-const shortCache = createCache({ defaultTtl: 1000 }); // 1 second
+| Option | Default | Description |
+|---|---|---|
+| `defaultTtl` | `60000` | Default expiration time in milliseconds |
+| `maxEntries` | `Infinity` | Maximum number of entries |
+| `evictionPolicy` | `'lru'` | Policy used when capacity is reached |
+| `clock` | `Date.now` | Injectable clock function |
 
-shortCache.set('token', 'secret123');
-console.log(shortCache.get('token')); // 'secret123'
+Example:
 
-// Wait 1.5 seconds...
-setTimeout(() => {
-  console.log(shortCache.get('token')); // null (expired)
-  console.log(shortCache.has('token')); // false
-}, 1500);
+```js
+const cache = createCache({
+  defaultTtl: 30000,
+  maxEntries: 1000,
+  evictionPolicy: 'lru',
+});
 ```
 
-### Handling Validation Errors
+## TTL Expiration
 
-```javascript
-try {
-  cache.set('', 'value'); // Throws TypeError because key is empty
-} catch (error) {
-  console.error(error.message); // Cache key must be a non-empty string.
-}
+TTL is specified in milliseconds.
+
+```js
+const cache = createCache({
+  defaultTtl: 5000,
+});
+
+cache.set('session', 'active');
+cache.set('temporary', 'value', 1000);
+cache.set('permanent', 'value', Infinity);
 ```
+
+- Positive TTL values expire after the specified duration.
+- `0` means the entry expires immediately.
+- `Infinity` means the entry never expires.
+- Negative TTL values are rejected.
+
+Expired entries are cleaned up lazily during cache operations such as `get()`, `has()`, `size()`, and before capacity eviction.
+
+## Eviction Policies
+
+When `maxEntries` is reached, the configured policy determines which entry is removed.
+
+| Policy | Behavior |
+|---|---|
+| `lru` | Least Recently Used |
+| `lfu` | Least Frequently Used |
+| `fifo` | First In, First Out |
+| `lifo` | Last In, First Out |
+| `mru` | Most Recently Used |
+| `random` | Randomly selected entry |
+
+Example:
+
+```js
+const cache = createCache({
+  maxEntries: 3,
+  evictionPolicy: 'lfu',
+});
+
+cache.set('a', 1);
+cache.set('b', 2);
+cache.set('c', 3);
+cache.set('d', 4);
+```
+
+The LFU policy evicts the entry with the lowest access frequency. Ties are resolved using recency.
 
 ## API Reference
 
-### `createCache(options)`
+### `createCache(options?)`
 
-Creates a new cache instance.
+Creates and returns a cache instance.
 
-- `options.defaultTtl` _(Number)_: Default expiration time in milliseconds. Defaults to `60000` (1 minute).
+### `set(key, value, customTtl?)`
 
-### Methods
+Stores a value under a key. An optional custom TTL overrides the default TTL.
 
-- **`set(key, value, [customTtl])`**: Stores a value with an optional custom TTL. Returns the entry object. Throws a `TypeError` if the key is not a non-empty string.
+### `get(key)`
 
-- **`get(key)`**: Retrieves the value associated with the key. Returns `null` if the key does not exist or has expired.
+Returns the stored value, or `null` if the key is missing or expired.
 
-- **`has(key)`**: Returns a boolean indicating whether a valid, unexpired key exists.
+### `has(key)`
 
-- **`del(key)`**: Explicitly removes a key from the cache. Returns `true` if the key existed and was deleted, otherwise `false`.
+Returns whether a non-expired entry exists.
 
-- **`clear()`**: Wipes all items from the cache.
+### `del(key)`
 
-- **`size()`**: Returns the count of active, unexpired items in the cache (automatically triggers cleanup of dead entries).
+Deletes an entry. Returns `true` if an entry was deleted, otherwise `false`.
 
-## Author
+### `clear()`
 
-Built with passion by **skullx**.
+Removes all entries from the cache.
+
+### `size()`
+
+Returns the number of non-expired entries.
+
+### `stats()`
+
+Returns a snapshot of cache statistics.
+
+```js
+console.log(cache.stats());
+
+// {
+//   hits: 10,
+//   misses: 2,
+//   evictions: 1,
+//   size: 5,
+//   hitRate: 0.8333333333333334
+// }
+```
+
+### `resetStats()`
+
+Resets hit, miss, and eviction counters without clearing cached entries.
+
+## TypeScript
+
+TypeScript declarations are included.
+
+```ts
+import createCache = require('@skullx/nano-cache');
+
+const cache = createCache<string>({
+  maxEntries: 100,
+  defaultTtl: 5000,
+  evictionPolicy: 'lru',
+});
+
+cache.set('name', 'nano-cache');
+
+const value: string | null = cache.get('name');
+```
+
+Supported eviction policy names are available through the `EvictionPolicy` type in the declaration namespace.
+
+## Development
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run TypeScript declaration checks:
+
+```bash
+npx --yes --package typescript tsc \
+  --noEmit \
+  --strict \
+  --target ES2020 \
+  --module commonjs \
+  type-tests/types.test.ts
+```
+
+Run benchmarks:
+
+```bash
+npm run benchmark
+```
+
+## Benchmarks
+
+Benchmarks compare native JavaScript `Map` operations with cache operations and measure the performance of the available eviction policies.
+
+Results depend on the Node.js version, hardware, and workload. Run benchmarks on your own environment before drawing performance conclusions.
 
 ## License
 
-[MIT](LICENSE)
+MIT
