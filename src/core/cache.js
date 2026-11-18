@@ -59,10 +59,18 @@ function createCache(options = {}) {
 
     validateTtl(ttlToUse, 'TTL');
 
-    cleanupExpiredEntries();
+    let existingEntry = cache.get(key);
 
-    const existingEntry = cache.get(key);
+    if (existingEntry && isExpired(existingEntry, clock())) {
+      removeEntry(key);
+      existingEntry = undefined;
+    }
+
     const isNew = !existingEntry;
+
+    if (isNew && cache.size >= maxEntries) {
+      cleanupExpiredEntries();
+    }
 
     if (isNew && cache.size >= maxEntries) {
       const keyToEvict = policy.evict();

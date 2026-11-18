@@ -113,11 +113,11 @@ Creates and returns a cache instance.
 
 ### `set(key, value, customTtl?)`
 
-Stores a value under a key. An optional custom TTL overrides the default TTL.
+Stores a value under a key. Keys must be non-empty, non-whitespace strings. An optional custom TTL overrides the default TTL.
 
 ### `get(key)`
 
-Returns the stored value, or `null` if the key is missing or expired.
+Returns the stored value, or `null` if the key is missing or expired. A stored `null` looks the same as a miss, so use `has()` if you store `null` values.
 
 ### `has(key)`
 
@@ -186,12 +186,7 @@ npm test
 Run TypeScript declaration checks:
 
 ```bash
-npx --yes --package typescript tsc \
-  --noEmit \
-  --strict \
-  --target ES2020 \
-  --module commonjs \
-  type-tests/types.test.ts
+npm run test:types
 ```
 
 Run benchmarks:

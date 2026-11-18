@@ -1,6 +1,6 @@
 {
   "name": "@skullx/nano-cache",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A lightweight, zero-dependency in-memory key-value cache with configurable TTL and eviction policies.",
   "keywords": [
     "cache",
@@ -35,7 +35,14 @@
     "LICENSE"
   ],
   "scripts": {
-    "test": "node --test test/",
+    "test": "node --test test/*.test.js",
+    "test:types": "npx --yes --package typescript tsc --noEmit --strict --target ES2020 --module commonjs type-tests/types.test.ts",
     "benchmark": "node benchmarks/cache.bench.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
